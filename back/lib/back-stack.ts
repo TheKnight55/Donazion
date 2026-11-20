@@ -161,6 +161,7 @@ export class BackStack extends cdk.Stack {
 
     addCategoryResource.addMethod('POST', new apigw.LambdaIntegration(addCategory_fn, integration_parameters), response_parameters)
 
+
   // Add a POST method to the '/todo/registerDonationCenter' resource
   const donCenterRegister_fn = new lambdaNodejs.NodejsFunction(this, 'registerDonationCenter', {
     runtime: lambda.Runtime.NODEJS_22_X,
@@ -183,3 +184,5 @@ export class BackStack extends cdk.Stack {
     response_parameters)
      }
   } 
+}
+
