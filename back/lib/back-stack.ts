@@ -57,11 +57,12 @@ export class BackStack extends cdk.Stack {
       },
     })
 
-    // Create a resource (e.g., '/calc')
+    // Create a resource for each lambda folder
     const todoResource = api_endpoint.root.addResource('todo')
-    const createResource = todoResource.addResource('create')
-    const appendResource = todoResource.addResource('append')
+    const loginOrgResource = todoResource.addResource('loginOrganization')
+    const addCategoryResource = todoResource.addResource('addCategory')
     const deleteResource = todoResource.addResource('delete')
+    const registerResource = todoResource.addResource('registerDonationCenter')
 
     const integration_parameters = { 
        proxy: false,
@@ -139,6 +140,46 @@ export class BackStack extends cdk.Stack {
       timeout: Duration.seconds(3),                                         // Example timeout, adjust as needed
     })
 
-    createResource.addMethod('POST', new apigw.LambdaIntegration(orgLogin_fn, integration_parameters), response_parameters)
-  }
-}
+    loginOrgResource.addMethod('POST', new apigw.LambdaIntegration(orgLogin_fn, integration_parameters), response_parameters)
+
+    // Add a POST method to the '/todo/addCategory' resource
+    const addCategory_fn = new lambdaNodejs.NodejsFunction(this, 'addCategory', {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'addCategory.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'addCategory')),
+      vpc: vpc,                                                             // Reference the VPC defined above
+      environment: {
+          // Define your environment variables here
+          RDS_USER: process.env.RDS_USER!,
+          RDS_PASSWORD: process.env.RDS_PASSWORD!,
+          RDS_DATABASE: process.env.RDS_DATABASE!,
+          RDS_HOST: process.env.RDS_HOST!
+        },
+      securityGroups: [securityGroup],                                      // Associate the security group
+      timeout: Duration.seconds(3),                                         // Example timeout, adjust as needed
+    })
+
+    addCategoryResource.addMethod('POST', new apigw.LambdaIntegration(addCategory_fn, integration_parameters), response_parameters)
+
+  // Add a POST method to the '/todo/registerDonationCenter' resource
+  const donCenterRegister_fn = new lambdaNodejs.NodejsFunction(this, 'registerDonationCenter', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'registerDonationCenter.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'registerDonationCenter')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: rdsUser,
+      RDS_PASSWORD: rdsPassword,
+      RDS_DATABASE: rdsDatabase,
+      RDS_HOST: rdsHost,
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  registerResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(donCenterRegister_fn, integration_parameters),
+    response_parameters)
+     }
+  } 
