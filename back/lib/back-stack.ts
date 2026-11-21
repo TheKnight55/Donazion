@@ -26,16 +26,23 @@ export class BackStack extends cdk.Stack {
           privateSubnetIds: ['subnet-0ddb5fc9ff7dd7d02', 'subnet-04a902d13ac7d035d', 'subnet-0ad679759acc77234'], // Replace with your private subnet IDs
     })
 
-    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-0d321a2bbfb81db2f', {             // Find your security group
+    const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-051fdd344c0191ef5', {             // Find your security group
         mutable: false
     })
+
+    // const securityGroup3 = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-03a983a0152002389', {             // Find your security group
+    //     mutable: false
+    // })
+    // const securityGroup2 = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-0d321a2bbfb81db2f', {             // Find your security group
+    //     mutable: false
+    // })
+
     // NOTE: You First have to add RDS_USER and RDS_PASSWORD to 
     // your environment variables for your account. Same with RDS_DATABASE and RDS_HOST
     const rdsUser     = process.env.RDS_USER!
     const rdsPassword = process.env.RDS_PASSWORD!
     const rdsDatabase = process.env.RDS_DATABASE!
     const rdsHost     = process.env.RDS_HOST!
-    console.log(rdsDatabase)
 
  // generic default handler for any API function that doesn't get its own Lambda method
     const default_fn = new lambdaNodejs.NodejsFunction(this, 'LambdaDefaultFunction', {
@@ -44,6 +51,7 @@ export class BackStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, 'default')),
       vpc: vpc,                                                             // Reference the VPC defined above
       securityGroups: [securityGroup],                                      // Associate the security group
+      //securityGroup2, securityGroup3],                                     
       timeout: Duration.seconds(3),                                         // Example timeout, adjust as needed
     })
 
@@ -64,7 +72,6 @@ export class BackStack extends cdk.Stack {
     const deleteResource = todoResource.addResource('delete')
     const registerResource = todoResource.addResource('registerDonationCenter')
     const removeResource = todoResource.addResource('removeDonationCenter')
-
 
 
     const integration_parameters = { 
