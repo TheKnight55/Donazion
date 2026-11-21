@@ -8,13 +8,13 @@
  * Incoming JSON payload:
  *
  * {
- *   "name" : "ToDo",
- *   "entry" : "Pack Lunch"
+ *   "email" : "login@donazion.com",
+ *   "password" : "banana1234"
  *  }
  */
 interface RequestPayload {
-    name: string;
-    entry: string;
+    email: string;
+    password: string;
 }
 export declare const handler: (event: RequestPayload) => Promise<any>;
 export {};

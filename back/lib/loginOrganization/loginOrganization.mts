@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 // Import the Lambda module
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import mysql from 'mysql2'
-import { RowDataPacket } from 'mysql2/promise'
+import type { RowDataPacket } from 'mysql2/promise'
 
 /**
  * Append ToDo List use case
@@ -16,13 +16,13 @@ import { RowDataPacket } from 'mysql2/promise'
  * Incoming JSON payload:
  * 
  * { 
- *   "name" : "ToDo", 
- *   "entry" : "Pack Lunch"
+ *   "email" : "login@donazion.com", 
+ *   "password" : "banana1234"
  *  }
  */
 interface RequestPayload {
-  name: string,
-  entry: string
+  email: string,
+  password: string
 }
 
 /**
@@ -30,16 +30,16 @@ interface RequestPayload {
  * 
  * { "statusCode" : 200 | 400,
  *   on success:
- *      will have "name" : "ToDo"
- *      will have "entries" : [ "entry1", "entry2", "entry3" ]
+ *      will have "email" : "login@donazion.com"
+ *      will have "password" : "banana1234"
  *   on failure:
  *      will have "error" : "e" on failure
  * }
  */
 interface ResponsePayload {
   statusCode: number,        // always exists
-  name? : string,
-  entries?: string[],
+  email? : string,
+  password?: string,
   error?: string
 }
 
@@ -59,17 +59,17 @@ export const handler = async (event: RequestPayload): Promise<any> => {
 
   // Get all task entries in a specific list. What is returned?
   interface ListRow extends RowDataPacket {
-    name: string
+    email: string
   }
 
   // function that will Insert new ToDo list OR do nothing if already there
-  const validateToDoListExists = (name:string) => {
+  const validateToDoListExists = (email:string) => {
     return new Promise((resolve, reject) => {
 
       // When creating a new list, it only inserts if not already there...
-      const selectQuery = "SELECT * from calc.Lists where name=?"
+      const selectQuery = "SELECT * from donazion.organization_login where email=${email}"
 
-      pool.query<ListRow[]>(selectQuery, [name], (error, rows) => {
+      pool.query<ListRow[]>(selectQuery, [email], (error, rows) => {
         if (error) {
           reject(new Error("Database error: " + error.message))
         } else {
@@ -79,14 +79,14 @@ export const handler = async (event: RequestPayload): Promise<any> => {
     })
   }
 
-  // function that will Append entry for an existing list
-  const appendEntryToList = (name:string, entry:string) => {
+  // function that will Append password for an existing list
+  const appendEntryToList = (email:string, password:string) => {
     return new Promise((resolve, reject) => {
 
       // When creating a new list, it only inserts if not already there...
-      const insertQuery = "INSERT INTO donazion.organization_login (list,entry) VALUES (?,?)"
+      const insertQuery = "INSERT INTO donazion.organization_login (email,password) VALUES (e,p)"
 
-      pool.query(insertQuery, [name, entry], (error, insertResult) => {
+      pool.query(insertQuery, [email, password], (error, insertResult) => {
         if (error) {
           reject(new Error("Database error: " + error.message))
         } else {
@@ -102,43 +102,45 @@ export const handler = async (event: RequestPayload): Promise<any> => {
   }
 
   // Note how this adds TYPES to the Promise (it will resolve to an array of string[])
-  const getEntries = (name:string) => {
-    return new Promise<string[]>((resolve, reject) => {
-      const selectQuery = "SELECT entry FROM calc.Entries where list=?"
-      pool.query<EntryRow[]>(selectQuery, [name], (error, rows) => {
+  const getPassword = (email:string) => {
+    return new Promise<string | null>((resolve, reject) => {
+      const selectQuery = "SELECT password FROM donazion.organization_login where email=?"
+      pool.query<EntryRow[]>(selectQuery, [email], (error, rows) => {
         if (error) {
           reject(new Error("Database error: " + error.message))
         } else {
-          // extract out the entries into string[] array (in case any actually exist)
-          let justEntries:string[] = rows.map((row):string => (row.entry))
-          resolve(justEntries || [])
+          if (rows.length > 0) {
+            resolve(rows[0]?.password);
+          } else {
+            resolve(null);
+          }
         }
       })
     })
   }
 
   try {
-    const name = event.name
-    if (name !== undefined) {
-      if (name === "") {
-        throw new Error ("empty name in name field")
+    const email = event.email
+    if (email !== undefined) {
+      if (email === "") {
+        throw new Error ("empty email in email field")
       }
-      const entry = event.entry
-      if (entry === "") {
-        throw new Error ("empty entry in entry field")
+      const password = event.password
+      if (password === "") {
+        throw new Error ("empty password in password field")
       }
 
-      const exists  = await validateToDoListExists(name)    // validate ToDo list exists
+      const exists  = await validateToDoListExists(email)    // validate ToDo list exists
       if (exists) {
-        const added = await appendEntryToList(name, entry)
-        const entries:string[] = await getEntries(name)     // and get all entries
+        const added = await appendEntryToList(email, password)
+        const existing_password:string | null = await getPassword(email)     // and get all entries
 
         response.statusCode = 200                  // success!
-        response.name = name
-        response.entries = entries                 // this is 'inner' object containing entries
+        response.email = email
+        response.password = password                 // this is 'inner' object containing entries
       }
     } else {
-      throw new Error ("missing name field")
+      throw new Error ("missing email field")
     }
 
   } catch (error) {
