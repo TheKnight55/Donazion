@@ -73,6 +73,7 @@ export class BackStack extends cdk.Stack {
     const registerResource = todoResource.addResource('registerDonationCenter')
     const removeResource = todoResource.addResource('removeDonationCenter')
 
+
     const integration_parameters = { 
        proxy: false,
        passthroughBehavior: apigw.PassthroughBehavior.WHEN_NO_MATCH,
@@ -215,4 +216,4 @@ export class BackStack extends cdk.Stack {
     response_parameters
     )
   }   
-}
+}    
