@@ -72,7 +72,8 @@ export class BackStack extends cdk.Stack {
     const deleteResource = todoResource.addResource('delete')
     const registerResource = todoResource.addResource('registerDonationCenter')
     const removeResource = todoResource.addResource('removeDonationCenter')
-
+    const showDashboardOrgResource = todoResource.addResource('showDashboardOrg')
+    const listDonationCentersOrgResource = todoResource.addResource('listDonationCentersOrg')
 
     const integration_parameters = { 
        proxy: false,
@@ -215,5 +216,49 @@ export class BackStack extends cdk.Stack {
     new apigw.LambdaIntegration(removeCenterRegister_fn, integration_parameters),
     response_parameters
     )
-  }   
-}    
+     
+
+  const showDashboardOrg_fn = new lambdaNodejs.NodejsFunction(this, 'showDashboardOrg', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'showDashboardOrg.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'showDashboardOrg')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: process.env.RDS_USER!,
+      RDS_PASSWORD: process.env.RDS_PASSWORD!,
+      RDS_DATABASE: process.env.RDS_DATABASE!,
+      RDS_HOST: process.env.RDS_HOST!
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  showDashboardOrgResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(showDashboardOrg_fn, integration_parameters),
+    response_parameters
+  )
+
+  const listDonationCentersOrg_fn = new lambdaNodejs.NodejsFunction(this, 'listDonationCentersOrg', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'listDonationCentersOrg.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'listDonationCentersOrg')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: process.env.RDS_USER!,
+      RDS_PASSWORD: process.env.RDS_PASSWORD!,
+      RDS_DATABASE: process.env.RDS_DATABASE!,
+      RDS_HOST: process.env.RDS_HOST!
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  listDonationCentersOrgResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(listDonationCentersOrg_fn, integration_parameters),
+    response_parameters
+  )
+
+  }    
+}
