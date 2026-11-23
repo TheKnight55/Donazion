@@ -1,7 +1,4 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 // Import the Lambda module
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import mysql from 'mysql2';
 // specify credentials. Created OUTSIDE handler, so it can be reused 
 const pool = mysql.createPool({
@@ -15,31 +12,16 @@ export const handler = async (event) => {
     // assume this will fail until proven that it will succeed.
     let response = { statusCode: 400 };
     // function that will Insert new ToDo list OR do nothing if already there
-    const validateToDoListExists = (email) => {
+    const validateOrgExists = (email) => {
         return new Promise((resolve, reject) => {
             // When creating a new list, it only inserts if not already there...
-            const selectQuery = "SELECT * from donazion.organization_login where email=${email}";
+            const selectQuery = "SELECT * from donazion.organization_login where email=?";
             pool.query(selectQuery, [email], (error, rows) => {
                 if (error) {
                     reject(new Error("Database error: " + error.message));
                 }
                 else {
                     resolve(rows && rows.length > 0);
-                }
-            });
-        });
-    };
-    // function that will Append password for an existing list
-    const appendEntryToList = (email, password) => {
-        return new Promise((resolve, reject) => {
-            // When creating a new list, it only inserts if not already there...
-            const insertQuery = "INSERT INTO donazion.organization_login (email,password) VALUES (e,p)";
-            pool.query(insertQuery, [email, password], (error, insertResult) => {
-                if (error) {
-                    reject(new Error("Database error: " + error.message));
-                }
-                else {
-                    resolve(insertResult);
                 }
             });
         });
@@ -53,8 +35,8 @@ export const handler = async (event) => {
                     reject(new Error("Database error: " + error.message));
                 }
                 else {
-                    if (rows.length > 0) {
-                        resolve(rows[0]?.password);
+                    if (rows.length > 0 && rows[0]?.password !== undefined) {
+                        resolve(rows[0]?.password ?? null);
                     }
                     else {
                         resolve(null);
@@ -70,16 +52,25 @@ export const handler = async (event) => {
                 throw new Error("empty email in email field");
             }
             const password = event.password;
-            if (password === "") {
+            if (password === undefined || password === "") {
                 throw new Error("empty password in password field");
             }
-            const exists = await validateToDoListExists(email); // validate ToDo list exists
+            const exists = await validateOrgExists(email); // validate organization exists
             if (exists) {
-                const added = await appendEntryToList(email, password);
+                console.log("Email exists!");
                 const existing_password = await getPassword(email); // and get all entries
-                response.statusCode = 200; // success!
-                response.email = email;
-                response.password = password; // this is 'inner' object containing entries
+                if (password == existing_password) {
+                    response.statusCode = 200; // success!
+                    response.email = email;
+                    response.password = password;
+                    console.log("Password matches!");
+                }
+                else {
+                    response.statusCode = 400; // failure
+                    response.email = email;
+                    response.password = password;
+                    console.log("Passwords don't match");
+                }
             }
         }
         else {
@@ -87,9 +78,12 @@ export const handler = async (event) => {
         }
     }
     catch (error) {
-        response.error = `error: ${JSON.stringify(event)}`; // pass back the actual event that caused problem in first place.
+        console.error(error);
+        response.statusCode = 400;
+        response.error = error instanceof Error ? error.message : String(error);
     }
     // Since pool is defined OUTSIDE of lambda function, no need to end() or close()
     return response;
 };
+//# sourceMappingURL=loginOrganization.mjs.map
 //# sourceMappingURL=loginOrganization.mjs.map
