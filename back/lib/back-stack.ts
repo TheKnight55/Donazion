@@ -30,13 +30,6 @@ export class BackStack extends cdk.Stack {
         mutable: false
     })
 
-    // const securityGroup3 = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-03a983a0152002389', {             // Find your security group
-    //     mutable: false
-    // })
-    // const securityGroup2 = ec2.SecurityGroup.fromSecurityGroupId(this, 'SG', 'sg-0d321a2bbfb81db2f', {             // Find your security group
-    //     mutable: false
-    // })
-
     // NOTE: You First have to add RDS_USER and RDS_PASSWORD to 
     // your environment variables for your account. Same with RDS_DATABASE and RDS_HOST
     const rdsUser     = process.env.RDS_USER!
@@ -44,7 +37,7 @@ export class BackStack extends cdk.Stack {
     const rdsDatabase = process.env.RDS_DATABASE!
     const rdsHost     = process.env.RDS_HOST!
 
- // generic default handler for any API function that doesn't get its own Lambda method
+    // generic default handler for any API function that doesn't get its own Lambda method
     const default_fn = new lambdaNodejs.NodejsFunction(this, 'LambdaDefaultFunction', {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'default.handler',
@@ -216,8 +209,7 @@ export class BackStack extends cdk.Stack {
     'POST',
     new apigw.LambdaIntegration(removeCenterRegister_fn, integration_parameters),
     response_parameters
-    )
-     
+    ) 
 
   const showDashboardOrg_fn = new lambdaNodejs.NodejsFunction(this, 'showDashboardOrg', {
     runtime: lambda.Runtime.NODEJS_22_X,
@@ -282,6 +274,5 @@ export class BackStack extends cdk.Stack {
     new apigw.LambdaIntegration(uploadCategoryItemsRegister_fn, integration_parameters),
     response_parameters
   )
-
-  }    
+  }
 }
