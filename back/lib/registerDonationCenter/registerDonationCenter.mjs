@@ -1,23 +1,70 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// Import the Lambda module
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-export class HelloCdkStack extends cdk.Stack {
-    constructor(scope, id, props) {
-        super(scope, id, props);
-        // Define the Lambda function resource
-        const myFunction = new lambda.Function(this, "HelloWorldFunction", {
-            runtime: lambda.Runtime.NODEJS_20_X, // Provide any supported Node.js runtime
-            handler: "index.handler",
-            code: lambda.Code.fromInline(`
-        exports.handler = async function(event) {
-          return {
-            statusCode: 200,
-            body: JSON.stringify('Hello World!'),
-          };
-        };
-      `),
+import mysql, {} from 'mysql2';
+// specify credentials. Created OUTSIDE handler, so it can be reused
+const pool = mysql.createPool({
+    host: process.env.RDS_HOST,
+    user: process.env.RDS_USER,
+    password: process.env.RDS_PASSWORD,
+    database: process.env.RDS_DATABASE,
+    connectionLimit: 2, // keep small per lambda container
+});
+export const handler = async (event) => {
+    // assume this will fail until proven that it will succeed.
+    let response = { statusCode: 400 };
+    // Does a donation center with this name exist?
+    const centerExists = (name) => {
+        return new Promise((resolve, reject) => {
+            const selectQuery = "SELECT name FROM donazion.donation_center WHERE name=?";
+            pool.query(selectQuery, [name], (error, rows) => {
+                if (error) {
+                    reject(new Error("Database error: " + error.message));
+                }
+                else {
+                    resolve(rows && rows.length > 0);
+                }
+            });
         });
+    };
+    // Flip registered to true ONLY if it is currently false.
+    // Resolves to the number of rows changed (1 = success, 0 = already registered)
+    const registerCenter = (name) => {
+        return new Promise((resolve, reject) => {
+            const updateQuery = "UPDATE donazion.donation_center SET registered = TRUE WHERE name=? AND registered = FALSE";
+            pool.query(updateQuery, [name], (error, updateResult) => {
+                if (error) {
+                    reject(new Error("Database error: " + error.message));
+                }
+                else {
+                    resolve(updateResult.affectedRows);
+                }
+            });
+        });
+    };
+    try {
+        const name = event.name;
+        if (name !== undefined) {
+            if (name === "") {
+                throw new Error("empty name in name field");
+            }
+            const exists = await centerExists(name); // validate donation center exists
+            if (!exists) {
+                throw new Error("donation center not found");
+            }
+            const changed = await registerCenter(name); // check + update in one statement
+            if (changed === 0) {
+                throw new Error("already registered");
+            }
+            response.statusCode = 200;
+            response.name = name;
+            response.registered = true; // dashboard can update its status from this
+        }
+        else {
+            throw new Error("missing name field");
+        }
     }
-}
+    catch (error) {
+        response.error = error.message; // pass back the reason it failed
+    }
+    // Since pool is defined OUTSIDE of lambda function, no need to end() or close()
+    return response;
+};
 //# sourceMappingURL=registerDonationCenter.mjs.map

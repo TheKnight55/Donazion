@@ -17,8 +17,6 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.277.0",
-    "constructs": "^10.8.1",
     "mysql2": "^3.24.6"
   }
 }
