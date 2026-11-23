@@ -123,7 +123,6 @@ export class BackStack extends cdk.Stack {
         'method.response.header.Access-Control-Allow-Origin': true,
         'method.response.header.Access-Control-Allow-Credentials': true
       },
- 
     }
   ]
     }

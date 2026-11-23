@@ -29,21 +29,6 @@ export const handler = async (event) => {
             });
         });
     };
-    // function that will Append password for an existing list
-    const appendEntryToList = (email, password) => {
-        return new Promise((resolve, reject) => {
-            // When creating a new list, it only inserts if not already there...
-            const insertQuery = "INSERT INTO donazion.organization_login (email,password) VALUES (?,?)";
-            pool.query(insertQuery, [email, password], (error, insertResult) => {
-                if (error) {
-                    reject(new Error("Database error: " + error.message));
-                }
-                else {
-                    resolve(insertResult);
-                }
-            });
-        });
-    };
     // Note how this adds TYPES to the Promise (it will resolve to an array of string[])
     const getPassword = (email) => {
         return new Promise((resolve, reject) => {
@@ -70,7 +55,7 @@ export const handler = async (event) => {
                 throw new Error("empty email in email field");
             }
             const password = event.password;
-            if (password === "") {
+            if (password === undefined || password === "") {
                 throw new Error("empty password in password field");
             }
             const exists = await validateOrgExists(email); // validate organization exists
@@ -84,12 +69,11 @@ export const handler = async (event) => {
                     console.log("Password matches!");
                 }
                 else {
-                    response.statusCode = 200; // failure
+                    response.statusCode = 400; // failure
                     response.email = email;
                     response.password = password;
                     console.log("Passwords don't match");
                 }
-                //const added = await appendEntryToList(email, password)
             }
         }
         else {
@@ -99,10 +83,10 @@ export const handler = async (event) => {
     catch (error) {
         console.error(error);
         response.statusCode = 400;
-        response.error = error?.message || String(error);
-        response.error = `error: ${JSON.stringify(event)}`; // pass back the actual event that caused problem in first place.
+        response.error = error instanceof Error ? error.message : String(error);
     }
     // Since pool is defined OUTSIDE of lambda function, no need to end() or close()
     return response;
 };
+//# sourceMappingURL=loginOrganization.mjs.map
 //# sourceMappingURL=loginOrganization.mjs.map
