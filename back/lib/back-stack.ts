@@ -68,6 +68,7 @@ export class BackStack extends cdk.Stack {
     const showDashboardOrgResource = todoResource.addResource('showDashboardOrg')
     const listDonationCentersOrgResource = todoResource.addResource('listDonationCentersOrg')
     const uploadCategoryItemsResource = todoResource.addResource('uploadCategoryItems')
+    const loginDonationCenterResource = todoResource.addResource('loginDonationCenter')
 
     const integration_parameters = { 
        proxy: false,
@@ -271,6 +272,28 @@ export class BackStack extends cdk.Stack {
   uploadCategoryItemsResource.addMethod(
     'POST',
     new apigw.LambdaIntegration(uploadCategoryItemsRegister_fn, integration_parameters),
+    response_parameters
+  )
+
+  // Add a POST method to the '/todo/loginDonationCenter' resource
+  const loginDonationCenterRegister_fn = new lambdaNodejs.NodejsFunction(this, 'loginDonationCenter', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'loginDonationCenter.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'loginDonationCenter')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: rdsUser,
+      RDS_PASSWORD: rdsPassword,
+      RDS_DATABASE: rdsDatabase,
+      RDS_HOST: rdsHost,
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  loginDonationCenterResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(loginDonationCenterRegister_fn, integration_parameters),
     response_parameters
   )
   }
