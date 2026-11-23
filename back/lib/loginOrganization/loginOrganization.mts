@@ -1,7 +1,4 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 // Import the Lambda module
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import mysql from 'mysql2';
 import type { RowDataPacket } from 'mysql2/promise'
 

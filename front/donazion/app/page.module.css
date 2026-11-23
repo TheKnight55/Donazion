@@ -1,0 +1,11 @@
+.addCategory {
+    margin-left: 200px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+input {
+    background: white;
+    color: aliceblue;
+}
