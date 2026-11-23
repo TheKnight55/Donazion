@@ -1,1 +1,1 @@
-{"version":3,"file":"registerDonationCenter.d.mts","sourceRoot":"","sources":["registerDonationCenter.mts"],"names":[],"mappings":"AAGA;;;;;GAKG;AAEH;;;;;;;GAOG;AACH,UAAU,cAAc;IACtB,IAAI,EAAE,MAAM,CAAC;IACb,KAAK,EAAE,MAAM,CAAA;CACd;AA6BD,eAAO,MAAM,OAAO,UAAiB,cAAc,KAAG,OAAO,CAAC,GAAG,CA+FhE,CAAA"}
+{"version":3,"file":"registerDonationCenter.d.mts","sourceRoot":"","sources":["registerDonationCenter.mts"],"names":[],"mappings":"AAGA;;;;;;;;;;GAUG;AAEH;;;;;;GAMG;AACH,UAAU,cAAc;IACtB,IAAI,EAAE,MAAM,CAAA;CACb;AA6BD,eAAO,MAAM,OAAO,UAAiB,cAAc,KAAG,OAAO,CAAC,GAAG,CAsEhE,CAAA"}
