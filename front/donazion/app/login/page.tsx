@@ -14,7 +14,6 @@ export default function Home() {
   const router = useRouter()
 
   const login = () => {
-    console.log("TEST")
     const email = document.getElementById("user") as HTMLInputElement
     const password = document.getElementById("pwd") as HTMLInputElement
 
@@ -26,22 +25,20 @@ export default function Home() {
       let resultComp = response.data.body
       if (status == 200) {
         setResult(resultComp)
-        console.log(email)
-        console.log("   ")
-        console.log(password)
-        console.log(status)
+        console.log("status"+status)
         router.push('/organization')
+        console.log("LOGGED IN")
 
       } else {
         setResult("error:" + resultComp)
         console.log(status)
         console.log("error:" + resultComp)
+        console.log("NOT LOGGED IN")
       }
     }).catch(function (error) {
       // this is a 500-type error, where there is no such API on the server side
       setResult(error)
     })
-    router.push('/organization')
     setRedraw(redraw+1)
   }
 

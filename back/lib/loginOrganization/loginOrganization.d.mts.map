@@ -1,1 +1,1 @@
-{"version":3,"file":"loginOrganization.d.mts","sourceRoot":"","sources":["loginOrganization.mts"],"names":[],"mappings":"AAOA,UAAU,UAAU;IAChB,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,QAAQ,CAAC,EAAE,MAAM,CAAC;CACrB;AAqBD,eAAO,MAAM,OAAO,UAAiB,UAAU,KAAG,OAAO,CAAC,GAAG,CAiF5D,CAAC"}
+{"version":3,"file":"loginOrganization.d.mts","sourceRoot":"","sources":["loginOrganization.mts"],"names":[],"mappings":"AAIA,UAAU,UAAU;IAChB,KAAK,CAAC,EAAE,MAAM,CAAC;IACf,QAAQ,CAAC,EAAE,MAAM,CAAC;CACrB;AAqBD,eAAO,MAAM,OAAO,UAAiB,UAAU,KAAG,OAAO,CAAC,GAAG,CAiF5D,CAAC"}
