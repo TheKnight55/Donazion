@@ -7,7 +7,7 @@ import type { RowDataPacket } from 'mysql2/promise'
  * If the category does not exist, return 400 error
  * If there is already an item with the same name and category, return 400 error
  * If the minimum price is higher than the maximum price, return 400 error
- * If multiple items are given at once, and one or more failed
+ * If multiple items are given and one or more failed, but not all, return 207 error
  */
 
 interface CategoryItem extends RowDataPacket {
@@ -38,11 +38,16 @@ interface RequestPayload {
  * Outgoing JSON payload:
  * 
  * { "statusCode" : 200 | 207 | 400,
- *   on success:
- *      will have the current list of categoryItems : {{category: cat1, name: name1, min_price: 5, max_price: 10}, 
- *                  {category: cat2, name: name2, min_price: 2, max_price: 6}, ...}
- *   on failure:
- *      will have "error" : "e" on failure
+ *   on 200:
+ *      will have the current list of "categoryItems" : {{category: "cat1", name: "name1", min_price: 5, max_price: 10}, 
+ *                  {category: "cat2", name: "name2", min_price: 2, max_price: 6}, ...}
+ *   on 207:
+ *      will have the current list of "categoryItems" : {{category: "cat1", name: "name1", min_price: 5, max_price: 10}, 
+ *                  {category: "cat2", name: "name2", min_price: 2, max_price: 6}, ...}
+ *      but also a list of "error" that shows which items failed and for what : [{index: 1, error: "this item already exists in this category"}, ...]
+ *   on 400:
+ *      will still give a list of the current "categoryItems" from the database, but no changes were made
+ *      also have a list of "error" that shows why each item failed
  * }
  */
 
@@ -68,12 +73,17 @@ const pool = mysql.createPool({
 })
 
 export const handler = async (event: RequestPayload): Promise<any> => {
-  if (!Array.isArray(event.categoryItems)) { // Checks if the given category items is a list
-    return { statusCode: 400, error: [{ index: -1, error: "categoryItems must be a list" }] }
+  const raw: unknown = event.categoryItems // Turns the given category items into an unknown type
+  let uploadedItems:CategoryItem[];
+  if (Array.isArray(raw)) { // Checks if the unknown is an array
+    uploadedItems = raw
+  } else if (raw != null && typeof raw == "object") {
+    uploadedItems = [raw as CategoryItem]
+  } else {
+    return {statusCode: 400, error: "categoryItems should be item or a list of items"}
   }
   // assume this will fail until proven that it will succeed.
   let response:ResponsePayload = { statusCode: 400 }
-  let uploadedItems:CategoryItem[] = event.categoryItems
 
   if (uploadedItems.length == 0) { // Checks if the given category items has at least an item
     return { statusCode: 400, error: [{ index: -1, error: "categoryItems must have at least one item" }] }
@@ -145,8 +155,8 @@ export const handler = async (event: RequestPayload): Promise<any> => {
   try {
     response.categoryItems = await allCategoryItems()
   } catch (error) {
-    console.error("How did we get here")
     console.error(error)
+    console.error("How did we get here")
   }
 
   if (failed == 0) {

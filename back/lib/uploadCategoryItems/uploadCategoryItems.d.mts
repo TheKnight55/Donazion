@@ -5,7 +5,7 @@ import type { RowDataPacket } from 'mysql2/promise';
  * If the category does not exist, return 400 error
  * If there is already an item with the same name and category, return 400 error
  * If the minimum price is higher than the maximum price, return 400 error
- * If multiple items are given at once, and one or more failed
+ * If multiple items are given and one or more failed, but not all, return 207 error
  */
 interface CategoryItem extends RowDataPacket {
     category: string;
