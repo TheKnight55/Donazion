@@ -1,5 +1,4 @@
 import mysql from 'mysql2';
-import { RowDataPacket } from 'mysql2/promise';
 // specify credentials. Created OUTSIDE handler, so it can be reused
 const pool = mysql.createPool({
     host: process.env.RDS_HOST,
@@ -11,51 +10,62 @@ const pool = mysql.createPool({
 export const handler = async (event) => {
     // assume this will fail until proven that it will succeed.
     let response = { statusCode: 400 };
-    const getDonationCenterCount = () => {
-        return new Promise((resolve, reject) => {
-            const selectQuery = `
-        SELECT COUNT(*) AS donationCenters
-        FROM donazion.donation_center
-        WHERE registered = 1
-      `;
-            pool.query(selectQuery, [], (error, rows) => {
-                if (error) {
-                    reject(new Error("Database error: " + error.message));
-                }
-                else {
-                    resolve(rows[0]?.donationCenters || 0);
-                }
-            });
-        });
-    };
-    const getInventoryTotals = () => {
+    const getCategories = () => {
         return new Promise((resolve, reject) => {
             const selectQuery = `
         SELECT
-          COALESCE(SUM(quantity), 0) AS totalItems,
-          COALESCE(SUM(market_value * quantity), 0) AS totalValue
-        FROM donazion.inventory
+          c.name AS categoryName,
+          ci.name AS itemName,
+          ci.min_price AS minPrice,
+          ci.max_price AS maxPrice
+        FROM donazion.category c
+        LEFT JOIN donazion.category_item ci
+          ON c.name = ci.category
+        ORDER BY c.name, ci.name
       `;
             pool.query(selectQuery, [], (error, rows) => {
                 if (error) {
                     reject(new Error("Database error: " + error.message));
                 }
                 else {
-                    resolve(rows[0]);
+                    resolve(rows);
                 }
             });
         });
     };
     try {
-        const donationCenters = await getDonationCenterCount();
-        const inventoryTotals = await getInventoryTotals();
+        const rows = await getCategories();
+        const categories = [];
+        /**
+         * Convert the SQL rows into the nested
+         * category -> items structure expected by the frontend.
+         */
+        for (const row of rows) {
+            let category = categories.find(c => c.name === row.categoryName);
+            if (!category) {
+                category = {
+                    name: row.categoryName,
+                    items: []
+                };
+                categories.push(category);
+            }
+            // LEFT JOIN means these can be null when
+            // a category has no items yet.
+            if (row.itemName !== null) {
+                category.items.push({
+                    name: row.itemName,
+                    minPrice: Number(row.minPrice),
+                    maxPrice: Number(row.maxPrice)
+                });
+            }
+        }
         response.statusCode = 200;
-        response.donationCenters = donationCenters;
-        response.totalItems = inventoryTotals.totalItems;
-        response.totalValue = inventoryTotals.totalValue;
+        response.categories = categories;
     }
     catch (error) {
-        response.error = `error: ${JSON.stringify(event)}`;
+        response.error = error instanceof Error
+            ? error.message
+            : String(error);
     }
     // Since pool is defined OUTSIDE of lambda function,
     // no need to end() or close()
