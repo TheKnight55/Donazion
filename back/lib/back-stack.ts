@@ -67,9 +67,9 @@ export class BackStack extends cdk.Stack {
     const removeResource = todoResource.addResource('removeDonationCenter')
     const showDashboardOrgResource = todoResource.addResource('showDashboardOrg')
     const listDonationCentersOrgResource = todoResource.addResource('listDonationCentersOrg')
+    const listDonationCentersDonResource = todoResource.addResource('listDonationCentersDon')
     const uploadCategoryItemsResource = todoResource.addResource('uploadCategoryItems')
     const loginDonationCenterResource = todoResource.addResource('loginDonationCenter')
-
     const integration_parameters = { 
        proxy: false,
        passthroughBehavior: apigw.PassthroughBehavior.WHEN_NO_MATCH,
@@ -250,6 +250,27 @@ export class BackStack extends cdk.Stack {
   listDonationCentersOrgResource.addMethod(
     'POST',
     new apigw.LambdaIntegration(listDonationCentersOrg_fn, integration_parameters),
+    response_parameters
+  )
+
+  const listDonationCentersDon_fn = new lambdaNodejs.NodejsFunction(this, 'listDonationCentersDon', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'listDonationCentersDon.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'listDonationCentersDon')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: process.env.RDS_USER!,
+      RDS_PASSWORD: process.env.RDS_PASSWORD!,
+      RDS_DATABASE: process.env.RDS_DATABASE!,
+      RDS_HOST: process.env.RDS_HOST!
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  listDonationCentersDonResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(listDonationCentersDon_fn, integration_parameters),
     response_parameters
   )
 
