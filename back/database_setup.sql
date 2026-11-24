@@ -89,10 +89,12 @@ create table inventory ( -- If an item already exists, you have to increment the
 -- Test values
 insert into organization_login values ('login@donazion.com', 'banana1234');
 insert into donation_center values ('Worcester Food Pantry', '100 Institute Rd.', 'password123', false);
-insert into location values('Worcester Food Pantry', '100 Institute Rd.', 'Worcester', 'MA', '01609', '42.2767', '-71.8080');
-insert into inventory values('Worcester Food Pantry', 'Air Conditioner', '300', '1');
-insert into inventory values('Worcester Food Pantry', 'Beans', '5', '1');
-insert into inventory values('Worcester Food Pantry', 'Soup', '300', '1');
+insert into location values ('Worcester Food Pantry', '100 Institute Rd.', 'Worcester', 'MA', '01609', '42.2767', '-71.8080');
+insert into inventory values ('Worcester Food Pantry', 'Air Conditioner', '300', '1');
+insert into inventory values ('Worcester Food Pantry', 'Beans', '5', '1');
+insert into inventory values ('Worcester Food Pantry', 'Soup', '300', '1');
+insert into category values ('Clothes');
+insert into category values ('Devices');
 
 -- See all values in every table
 select * from donazion.organization_login;
