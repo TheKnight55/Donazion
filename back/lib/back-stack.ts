@@ -14,7 +14,6 @@ export class BackStack extends cdk.Stack {
     super(scope, id, props);
 
     // The code that defines your stack goes here
-
     // example resource
     // const queue = new sqs.Queue(this, 'BackQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
@@ -68,6 +67,7 @@ export class BackStack extends cdk.Stack {
     const showDashboardOrgResource = todoResource.addResource('showDashboardOrg')
     const listDonationCentersOrgResource = todoResource.addResource('listDonationCentersOrg')
     const listDonationCentersDonResource = todoResource.addResource('listDonationCentersDon')
+    const listDonationCentersWishResource = todoResource.addResource('listDonationCentersWish')
     const uploadCategoryItemsResource = todoResource.addResource('uploadCategoryItems')
     const loginDonationCenterResource = todoResource.addResource('loginDonationCenter')
     const integration_parameters = { 
