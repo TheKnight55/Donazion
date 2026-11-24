@@ -4,8 +4,8 @@ import type { RowDataPacket } from 'mysql2/promise'
 /**
  * Show Organization Dashboard use case
  *
- * Returns summary information about all registered
- * donation centers and their inventory.
+ * Returns all categories and their category items,
+ * including the low and high price for each item.
  */
 
 /**
@@ -18,91 +18,89 @@ import type { RowDataPacket } from 'mysql2/promise'
  * Outgoing JSON payload:
  *
  * {
- *   "statusCode" : 200 | 400,
+ *   "statusCode": 200 | 400,
+ *
  *   on success:
- *      "donationCenters" : 5,
- *      "totalItems" : 143,
- *      "totalValue" : 3250.75
+ *      "categories": [
+ *        {
+ *          "name": "Clothes",
+ *          "items": [
+ *            {
+ *              "name": "Nike Shoes",
+ *              "minPrice": 20,
+ *              "maxPrice": 50
+ *            }
+ *          ]
+ *        }
+ *      ]
+ *
  *   on failure:
- *      "error" : "e"
+ *      "error": "e"
  * }
  */
 
 interface ResponsePayload {
-  statusCode: number,
-  donationCenters?: number,
-  totalItems?: number,
-  totalValue?: number,
+  statusCode: number
+  categories?: Category[]
   error?: string
+}
+
+interface CategoryItem {
+  name: string
+  minPrice: number
+  maxPrice: number
+}
+
+interface Category {
+  name: string
+  items: CategoryItem[]
 }
 
 // specify credentials. Created OUTSIDE handler, so it can be reused
 const pool = mysql.createPool({
-    host: process.env.RDS_HOST!,
-    user: process.env.RDS_USER!,
-    password: process.env.RDS_PASSWORD!,
-    database: process.env.RDS_DATABASE!,
-    connectionLimit: 2,
+  host: process.env.RDS_HOST!,
+  user: process.env.RDS_USER!,
+  password: process.env.RDS_PASSWORD!,
+  database: process.env.RDS_DATABASE!,
+  connectionLimit: 2,
 })
 
 export const handler = async (event: any): Promise<any> => {
 
   // assume this will fail until proven that it will succeed.
-  let response:ResponsePayload = { statusCode: 400 }
+  let response: ResponsePayload = { statusCode: 400 }
 
   /**
-   * Get the number of registered donation centers.
+   * Get all categories and their category items.
    */
-  interface CenterCountRow extends RowDataPacket {
-    donationCenters: number
+  interface CategoryRow extends RowDataPacket {
+    categoryName: string
+    itemName: string | null
+    minPrice: number | null
+    maxPrice: number | null
   }
 
-  const getDonationCenterCount = () => {
-    return new Promise<number>((resolve, reject) => {
-
-      const selectQuery = `
-        SELECT COUNT(*) AS donationCenters
-        FROM donazion.donation_center
-        WHERE registered = 1
-      `
-
-      pool.query<CenterCountRow[]>(selectQuery, [], (error, rows) => {
-
-        if (error) {
-          reject(new Error("Database error: " + error.message))
-        } else {
-          resolve(rows[0]?.donationCenters || 0)
-        }
-
-      })
-    })
-  }
-
-  /**
-   * Get the total number of inventory items and
-   * total market value of all inventory.
-   */
-  interface InventoryRow extends RowDataPacket {
-    totalItems: number
-    totalValue: number
-  }
-
-  const getInventoryTotals = () => {
-    return new Promise<InventoryRow>((resolve, reject) => {
+  const getCategories = () => {
+    return new Promise<CategoryRow[]>((resolve, reject) => {
 
       const selectQuery = `
         SELECT
-          COALESCE(SUM(quantity), 0) AS totalItems,
-          COALESCE(SUM(market_value * quantity), 0) AS totalValue
-        FROM donazion.inventory
+          c.name AS categoryName,
+          ci.name AS itemName,
+          ci.min_price AS minPrice,
+          ci.max_price AS maxPrice
+        FROM donazion.category c
+        LEFT JOIN donazion.category_item ci
+          ON c.name = ci.category
+        ORDER BY c.name, ci.name
       `
 
-      pool.query<InventoryRow[]>(selectQuery, [], (error, rows) => {
+      pool.query<CategoryRow[]>(selectQuery, [], (error, rows) => {
 
         if (error) {
           reject(new Error("Database error: " + error.message))
         } else {
-          resolve(rows[0])
+          resolve(rows)
         }
 
       })
@@ -111,18 +109,48 @@ export const handler = async (event: any): Promise<any> => {
 
   try {
 
-    const donationCenters:number = await getDonationCenterCount()
+    const rows: CategoryRow[] = await getCategories()
 
-    const inventoryTotals:InventoryRow = await getInventoryTotals()
+    const categories: Category[] = []
+
+    /**
+     * Convert the SQL rows into the nested
+     * category -> items structure expected by the frontend.
+     */
+    for (const row of rows) {
+
+      let category = categories.find(
+        c => c.name === row.categoryName
+      )
+
+      if (!category) {
+        category = {
+          name: row.categoryName,
+          items: []
+        }
+
+        categories.push(category)
+      }
+
+      // LEFT JOIN means these can be null when
+      // a category has no items yet.
+      if (row.itemName !== null) {
+        category.items.push({
+          name: row.itemName,
+          minPrice: Number(row.minPrice),
+          maxPrice: Number(row.maxPrice)
+        })
+      }
+    }
 
     response.statusCode = 200
-    response.donationCenters = donationCenters
-    response.totalItems = inventoryTotals.totalItems
-    response.totalValue = inventoryTotals.totalValue
+    response.categories = categories
 
   } catch (error) {
 
-    response.error = `error: ${JSON.stringify(event)}`
+    response.error = error instanceof Error
+      ? error.message
+      : String(error)
 
   }
 
