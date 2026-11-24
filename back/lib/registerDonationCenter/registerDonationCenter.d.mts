@@ -1,20 +1,23 @@
 /**
- * Append ToDo List use case
+ * Register Donation Center use case (donation center dashboard)
  *
- * If the list does not exists, return 400 error
- * If it does exist, append to its list of values.
+ * Called by a logged-in donation center to register itself with the organization.
+ * Only changes the registered flag. The center's account, inventory, wishlist and
+ * location are untouched, so it can keep using the site either way.
+ *
+ * If the donation center does not exist, return 400 error
+ * If it is already registered, return 400 error ("already registered")
+ * Otherwise set registered = true.
  */
 /**
- * Incoming JSON payload:
+ * Incoming JSON payload (name of the logged-in donation center):
  *
  * {
- *   "name" : "ToDo",
- *   "entry" : "Pack Lunch"
- *  }
+ *   "name" : "Some Center"
+ * }
  */
 interface RequestPayload {
     name: string;
-    entry: string;
 }
 export declare const handler: (event: RequestPayload) => Promise<any>;
 export {};
