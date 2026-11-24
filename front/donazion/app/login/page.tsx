@@ -4,6 +4,8 @@ import axios from "axios"
 import instance from "../aws"
 import { refresh } from "next/cache";
 import { useRouter } from 'next/navigation'
+import styles from "../page.module.css";
+
 
 export default function Home() {
   const [email, setEmail] = React.useState("")
@@ -45,7 +47,7 @@ export default function Home() {
   return (
     <div>
       <main>
-        <h1>Login</h1>
+        <h1 className="title">Login</h1>
         <h2>Username: </h2><input id="user" value={email} onChange={(e) => setEmail(e.target.value)}></input>
         <h2>Password: </h2><input id="pwd" value={password} onChange={(p) => setPassword(p.target.value)}></input>
         <button onClick={() => login()}>Log In</button>
@@ -56,8 +58,8 @@ export default function Home() {
         <select
             value={selected}
             onChange={(e) => setSelected(e.target.value)}>
-            <option value="">Organization</option>
-            <option value="shelter">Donation Center</option>
+            <option value="Organization" className="{styles.option}">Organization</option>
+            <option value="Donation center" className={styles.option}>Donation Center</option>
         </select>
 
         <p>Selected: {selected}</p>

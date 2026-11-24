@@ -10,14 +10,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <nav>
-          <Link href="/">Home</Link>
-          {' | '}
-          <Link href="/login">Login</Link>
-          {' | '}
-          <Link href="/constants">Constants</Link>
-        </nav>
-
         {children}
       </body>
     </html>

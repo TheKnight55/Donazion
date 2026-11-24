@@ -26,10 +26,10 @@ body {
 }
 
 main {
-  background-color: rgb(13, 133, 239);
+  background-color: rgba(100, 94, 89, 0.596);
 }
 
 button {
-  background: blue;
-  border-radius: 100px;
+  background: rgb(192, 101, 4);
+  border-radius: 10px;
 }

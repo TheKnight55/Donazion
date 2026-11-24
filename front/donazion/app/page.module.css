@@ -7,5 +7,19 @@
 
 input {
     background: white;
-    color: aliceblue;
+}
+
+button {
+  background: rgb(192, 101, 4);
+  border-radius: 10px;
+}
+
+.title {
+    font-size: 70px;
+    font-weight: bold;
+}
+
+.option {
+    font-weight: bold;
+    background: rgb(255, 213, 0);
 }
