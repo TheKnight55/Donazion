@@ -1,5 +1,5 @@
 import mysql from 'mysql2'
-import { RowDataPacket } from 'mysql2/promise'
+import type { RowDataPacket } from 'mysql2/promise'
 
 /**
  * Upload Category Item use case
@@ -124,7 +124,7 @@ export const handler = async (event: RequestPayload): Promise<any> => {
       if (name === "") {
         throw new Error ("empty name in name field")
       }
-      const entry = event.entry
+      const entry = event.category
       if (entry === "") {
         throw new Error ("empty entry in entry field")
       }
@@ -136,9 +136,8 @@ export const handler = async (event: RequestPayload): Promise<any> => {
 
         // HEY, make sure to validate when NOT THERE after all...
 
-        response.statusCode = 200                  // success!
-        response.name = name
-        response.entries = entries                 // this is 'inner' object containing entries
+        response.statusCode = 200
+        response.categoryItems = []                 // this is 'inner' object containing entries
       }
     } else {
       throw new Error ("missing name field")
