@@ -9,12 +9,19 @@ const pool = mysql.createPool({
     decimalNumbers: true // makes decimals not strings when sql returns them
 });
 export const handler = async (event) => {
-    if (!Array.isArray(event.categoryItems)) { // Checks if the given category items is a list
-        return { statusCode: 400, error: [{ index: -1, error: "categoryItems must be a list" }] };
+    const raw = event.categoryItems; // Turns the given category items into an unknown type
+    let uploadedItems;
+    if (Array.isArray(raw)) { // Checks if the unknown is an array
+        uploadedItems = raw;
+    }
+    else if (raw != null && typeof raw == "object") {
+        uploadedItems = [raw];
+    }
+    else {
+        return { statusCode: 400, error: "categoryItems should be item or a list of items" };
     }
     // assume this will fail until proven that it will succeed.
     let response = { statusCode: 400 };
-    let uploadedItems = event.categoryItems;
     if (uploadedItems.length == 0) { // Checks if the given category items has at least an item
         return { statusCode: 400, error: [{ index: -1, error: "categoryItems must have at least one item" }] };
     }
@@ -86,8 +93,8 @@ export const handler = async (event) => {
         response.categoryItems = await allCategoryItems();
     }
     catch (error) {
-        console.error("How did we get here");
         console.error(error);
+        console.error("How did we get here");
     }
     if (failed == 0) {
         response.statusCode = 200;
