@@ -42,6 +42,15 @@ export default function OrganizationDashboard() {
         loadDashboard()
     }, []);
 
+    React.useEffect(() => {
+    instance.post('/addCategory', { name: "retrieve" })
+        .then((response) => {
+            if (response.data.statusCode === 200) {
+                setCategories(response.data.names);
+            }
+        })
+        .catch((error) => console.log(error));
+}, []);
     const addCategory = () => {
         const category = document.getElementById("category") as HTMLInputElement
         // just get all values from the response, and use that

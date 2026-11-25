@@ -46,6 +46,7 @@ Our use cases:
 6. DC: Login DonationCenter	     | - Snyder
     To test, use email: food.pantry@gmail.com and password: password123
     Select Donation Center from the dropdown menu and press "Log In"
+    
 7. Remove DonationCenter	     | - Deni
 
 8. List DonationCenters Org	     | - Stephen
