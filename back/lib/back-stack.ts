@@ -62,6 +62,7 @@ export class BackStack extends cdk.Stack {
     const todoResource = api_endpoint.root.addResource('todo')
     const loginOrgResource = todoResource.addResource('loginOrganization')
     const addCategoryResource = todoResource.addResource('addCategory')
+    const removeCategoryResource = todoResource.addResource('removeCategory')
     const deleteResource = todoResource.addResource('delete')
     const registerResource = todoResource.addResource('registerDonationCenter')
     const removeResource = todoResource.addResource('removeDonationCenter')
@@ -317,5 +318,26 @@ export class BackStack extends cdk.Stack {
     new apigw.LambdaIntegration(loginDonationCenterRegister_fn, integration_parameters),
     response_parameters
   )
+
+  const removeCategory_fn = new lambdaNodejs.NodejsFunction(this, 'removeCategory', {
+    runtime: lambda.Runtime.NODEJS_22_X,
+    handler: 'removeCategory.handler',
+    code: lambda.Code.fromAsset(path.join(__dirname, 'removeCategory')),
+    vpc: vpc,
+    environment: {
+      RDS_USER: rdsUser,
+      RDS_PASSWORD: rdsPassword,
+      RDS_DATABASE: rdsDatabase,
+      RDS_HOST: rdsHost,
+    },
+    securityGroups: [securityGroup],
+    timeout: Duration.seconds(3),
+  })
+
+  removeCategoryResource.addMethod(
+    'POST',
+    new apigw.LambdaIntegration(removeCategory_fn, integration_parameters),
+    response_parameters
+    )
   }
 }

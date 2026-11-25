@@ -6,7 +6,6 @@ import { refresh } from "next/cache";
 import OrganizationHeader from "../../components/OrganizationHeader"
 import { useRouter } from "next/navigation"
 import styles from "../page.module.css";
-let categories: string[] = [];
 
 export default function OrganizationDashboard() {
     const [email, setEmail] = React.useState("")
@@ -15,19 +14,28 @@ export default function OrganizationDashboard() {
     const [selected, setSelected] = React.useState("")
     const [redraw, setRedraw] = React.useState(0)
     const router = useRouter()
+    const [categories, setCategories] = React.useState<string[]>([]);
 
+    React.useEffect(() => {
+    instance.post('/addCategory', { name: "retrieve" })
+        .then((response) => {
+            if (response.data.statusCode === 200) {
+                setCategories(response.data.names);
+            }
+        })
+        .catch((error) => console.log(error));
+}, []);
     const addCategory = () => {
         const category = document.getElementById("category") as HTMLInputElement
         // just get all values from the response, and use that
         instance.post('/addCategory', {name: category.value}).then((response) => {
         let status = response.data.statusCode
-        categories=response.data.names
         let resultComp = response.data.body
         if (status == 200) {
             setResult(resultComp)
+            setCategories(response.data.names);
             console.log("status: "+status)
             console.log(">> "+categories+" <<")
-
 
         } else {
             setResult("error: " + resultComp)
@@ -41,17 +49,15 @@ export default function OrganizationDashboard() {
     }
 
     const removeCategory = (c:string) => {
-        const category = document.getElementById("category") as HTMLInputElement
         // just get all values from the response, and use that
-        instance.post('/addCategory', {name: category.value}).then((response) => {
+        instance.post('/removeCategory', {name: c}).then((response) => {
         let status = response.data.statusCode
-        categories=response.data.names
+        setCategories(response.data.names);
         let resultComp = response.data.body
         if (status == 200) {
             setResult(resultComp)
             console.log("status: "+status)
             console.log(">> "+categories+" <<")
-
 
         } else {
             setResult("error: " + resultComp)
@@ -69,7 +75,7 @@ export default function OrganizationDashboard() {
           <li key={c} className={styles.clerks}>
               <h3>{c}</h3>
               <button onClick={() => add_catItems()}>Add category item</button>
-              <button onClick={() => removeCategory(c)}>Remove category</button>
+              <button onClick={() => removeCategory(c)}>Remove Category</button>
               <br></br>
           </li>
         )
@@ -88,33 +94,12 @@ export default function OrganizationDashboard() {
             <div className="dashboard">
                 <h2>Organization Dashboard</h2>
                 <div className="dashboard-buttons">
-                    <button onClick={() =>router.push("/organization/donation-centers")}>List Donation Centers</button>
+                    <button 
+                    //</div>onClick={() =>router.push("/organization/donation-centers")}
+                    >List Donation Centers</button>
                 </div>
                 <section className="categories">
                     <h2>Categories</h2>
-                    <div className="category">
-                        <div className="category-header">
-                            <button>Remove Category</button>
-                        </div>
-                        <div className="category-item">
-                            <div>
-                                
-                            </div>
-                            <div className="item-buttons">
-                                <button>Edit Category Item</button>
-                                <button>Remove Category Item</button>
-                            </div>
-                        </div>
-                        <button>Add Category Item</button>
-                    </div>
-                    <div className="category">
-                        <div className="category-header">
-                            <h3>Vehicles</h3>
-                            <button>Remove Category</button>
-                        </div>
-                        <button>Upload Category Items</button>
-                        <button>Add Category Item</button>
-                    </div> 
                     {
                         categories.map(c => 
                             list_category(c) 

@@ -42,18 +42,28 @@ export const handler = async (event) => {
     };
     try {
         const name = event.name;
-        if (name !== undefined) {
-            if (name === "") {
-                throw new Error("empty name in category field");
-            }
-            const added = await appendCategory(name);
+        if (name == "retrieve") {
+            const names = await getCategories();
+            response.statusCode = 200;
+            response.names = names;
+        }
+        if (name === undefined) {
+            throw new Error("missing name field");
+        }
+        if (name === "") {
+            throw new Error("empty name in category field");
+        }
+        if (name === "retrieve") {
+            const names = await getCategories();
+            response.statusCode = 200;
+            response.names = names;
+        }
+        else {
+            await appendCategory(name);
             const names = await getCategories();
             response.statusCode = 200;
             console.log("Added " + name + " to categories");
             response.names = names;
-        }
-        else {
-            throw new Error("missing name field");
         }
     }
     catch (error) {
