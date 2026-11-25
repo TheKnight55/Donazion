@@ -1,20 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    reactCompiler: true,
-    output: "export",
-    basePath: "",
-    experimental: {
-        agentFeedback: true,
+  /* config options here */
+  experimental: {
+    agentFeedback: true,
+  },
+  reactCompiler: true,
+  output: 'export',
+  basePath: "",
+  trailingSlash: true,
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
     },
-    turbopack: {
-        rules: {
-            "*.css": {
-                loaders: ["@tailwindcss/turbopack"],
-                as: "*.css",
-            },
-        },
-    },
+  },
 };
 
 export default nextConfig;
