@@ -11,7 +11,7 @@ export default function Home() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [result, setResult] = React.useState("")
-  const [selected, setSelected] = React.useState("")
+  const [selected, setSelected] = React.useState("Organization")
   const [redraw, setRedraw] = React.useState(0)
   const router = useRouter()
 
@@ -22,13 +22,25 @@ export default function Home() {
     // just get all values from the response, and use that
     console.log("Email:", email.value)
     console.log("Password entered:", password.value ? "Yes" : "No")
-    instance.post('/loginOrganization', {email: email.value, password: password.value}).then((response) => {
+    let endpoint;
+    if (selected == "Organization") {
+      console.log("Organization")
+      endpoint = "/loginOrganization"
+    } else {
+      console.log("Donation Center")
+      endpoint = "/loginDonationCenter"
+    }
+    instance.post(endpoint, {email: email.value, password: password.value}).then((response) => {
       let status = response.data.statusCode
       let resultComp = response.data.body
       if (status == 200) {
         setResult(resultComp)
         console.log("status"+status)
-        router.push('/organization')
+        if (selected == "Organization") {
+          router.push('/organization')
+        } else {
+          router.push('/donation_center')
+        }
         console.log("LOGGED IN")
 
       } else {
